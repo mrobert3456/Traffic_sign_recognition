@@ -131,3 +131,5 @@ dmypy.json
 #ppm files
 *.ppm
 
+#hdf files
+*.hdf5
