@@ -36,13 +36,14 @@ with h5py.File('ts' + '/' + 'mean_rgb_dataset_ts.hdf5', 'r') as f:
     # Converting it into Numpy array
     mean_rgb = np.array(mean_rgb)  # Numpy arrays
 
+
 # Window to show current view
 cv2.namedWindow('Current view', cv2.WINDOW_NORMAL)
 
 # Window to show classification result
 cv2.namedWindow('Classified as', cv2.WINDOW_NORMAL)
 
-camera = cv2.VideoCapture("test4.mp4")
+camera = cv2.VideoCapture("test6.mp4")
 
 # Defining counter for FPS
 counter = 0
@@ -66,9 +67,12 @@ while camera.isOpened():
     # Converting caught frame to HSV colour space
     frame_hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
 
-    # Applying mask with founded boundary numbers
-    mask = cv2.inRange(frame_hsv, (0, 130, 80), (180, 255, 255))
 
+
+    # Applying mask with founded boundary numbers
+    mask = cv2.inRange(frame_hsv, (0, 130, 180), (180, 255, 255))
+
+    #cv2.imshow('ag',mask)
     # Finding contours
     # All found contours are placed into a list
     # Every individual contour is a Numpy array of (x, y) coordinates,
@@ -113,7 +117,7 @@ while camera.isOpened():
                                      y_min + box_height - int(box_height * 0.1),
                            x_min + int(box_width * 0.1):
                            x_min + box_width - int(box_width * 0.1)]
-
+        cv2.imshow('cut', cut_fragment_bgr)
         """
         End of:
         Cutting detected fragment
@@ -126,7 +130,6 @@ while camera.isOpened():
 
         # Swapping channels from BGR to RGB
         frame_rgb = cv2.cvtColor(cut_fragment_bgr, cv2.COLOR_BGR2RGB)
-
         # Resizing frame to 48 by 48 pixels size
         frame_rgb = cv2.resize(frame_rgb,
                                (48, 48),
@@ -134,9 +137,9 @@ while camera.isOpened():
 
         # Implementing normalization by dividing image's pixels on 255.0
         frame_rgb_255 = frame_rgb / 255.0
-
         # Implementing normalization by subtracting Mean Image
         frame_rgb_255_mean = frame_rgb_255 - mean_rgb
+
 
         # Extending dimension from (height, width, channels)
         # to (1, height, width, channels)
@@ -198,6 +201,7 @@ while camera.isOpened():
 
         # Showing classification result
         cv2.imshow('Classified as', temp)
+
         # print('Prediction: '+labels[int(prediction)]+'   Score: '+str(scores[0][prediction]))
 
         """
@@ -223,6 +227,7 @@ while camera.isOpened():
 
         # Showing information in prepared OpenCV windows
         cv2.imshow('Classified as', temp)
+
 
     """
     End of:

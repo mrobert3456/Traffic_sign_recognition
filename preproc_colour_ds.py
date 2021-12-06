@@ -42,7 +42,7 @@ print(x_validation.shape)
 print(x_test.shape)
 print()
 
-# apply normalization by divide every pixel by 255.0
+# apply normalization by divide every pixel by 255
 x_train_norm=x_train/255.0
 x_valid_norm=x_validation/255.0
 x_test_norm=x_test/255.0

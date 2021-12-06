@@ -35,12 +35,12 @@ for curr_dir, dirs, files in os.walk('GTSRB'):
 
             # store the currently ROI-d images, then it will be added vertically to the x, y_train
             x_temp = np.zeros((1, 48, 48, 3))
-
+            # current class numbers
             y_temp = np.zeros(1)
 
             first_ts = True  # with that x,y_train will be updated once at the first ROI
 
-            # iterating through the dframe
+            # iterating through the images and get ROI
             # tqdm will show a trackbar of the process
             for i in tqdm(range(drows)):
 
@@ -61,7 +61,7 @@ for curr_dir, dirs, files in os.walk('GTSRB'):
                 # Getting ROI from imgs
                 roi_img = img[y_left:y_right, x_left:x_right]
 
-                roi_img = cv2.resize(roi_img, (48, 48), interpolation=cv2.INTER_CUBIC)  # Inter_cubic enlarges the img
+                roi_img = cv2.resize(roi_img, (48, 48), interpolation=cv2.INTER_CUBIC)  # Inter_cubic enlarges the img after resizing
 
                 # if it is the first ROI-d img, then save it to the main arrays
                 if first_ts:
@@ -72,11 +72,13 @@ for curr_dir, dirs, files in os.walk('GTSRB'):
                     x_temp[0, :, :, :] = roi_img
                     y_temp[0] = class_idx
 
+                    # adding current ROI-d img to the main array
                     x_train = np.concatenate((x_train, x_temp), axis=0)
                     y_train = np.concatenate((y_train, y_temp), axis=0)
 
             file_name = f[:-4]  # getting the save file names
             # saving ROI-d img-s to binary files
+            # there will be 43 HDF5 files, each contains the corresponding traffic sign class's images
             with h5py.File('GTSRB/' + file_name + '.hdf5', 'w') as interm_f:
                 interm_f.create_dataset('x_train', data=x_train, dtype='f')
                 interm_f.create_dataset('y_train', data=y_train, dtype='i')
@@ -94,7 +96,7 @@ with h5py.File('GTSRB' + '/' + 'GT-final_test.hdf5', 'r') as f:
     x_train = np.array(x_train)
     y_train = np.array(y_train)
 
-# getting the rest
+# getting the rest 43 HDF5 files and save it to one HDF5 file
 for curr_dir, dirs, files in os.walk('GTSRB'):
     for f in files:
         if f.endswith('.hdf5') and f != 'GT-final_test.hdf5':
@@ -112,14 +114,14 @@ for curr_dir, dirs, files in os.walk('GTSRB'):
 
                 print("Done: ", f)  # printing the processed filenames
 
-""" end of Getting the binary files and save it to one common array"""
+""" end of Getting the binary files and save it to one common  numpy array"""
 
 """Suffle data along the x axis"""
 x_train, y_train = shuffle(x_train, y_train)  # need to shuffle for training
 # the cnn may find some connections of the orders of the incoming sings, and it reduces accuracy
 
 
-"""Splittin dataset into train, validation and test"""
+"""Splitting dataset into train, validation and test"""
 
 # first 30% for training
 x_temp = x_train[:int(x_train.shape[0] * 0.3), :, :, :]

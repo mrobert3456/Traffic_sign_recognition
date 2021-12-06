@@ -7,6 +7,7 @@ Created on Thu Oct 21 18:32:30 2021
 
 import numpy as np
 import h5py
+import pydot
 
 from keras.models import Sequential, load_model
 from keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Dropout, AvgPool2D
@@ -37,7 +38,7 @@ model.add(MaxPool2D())
 # Adding fully connected layers
 model.add(Flatten())
 model.add(Dense(128, activation='relu'))
-model.add(Dense(43, activation='softmax'))
+model.add(Dense(43, activation='softmax')) # output
 
 # Compiling created model
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -46,6 +47,7 @@ model.save('ts' + '/' + 'model_ts_rgb.h5')
 
 print('model is compiled successfully')
 
+model.summary()
 
 """TRAINING PHASE"""
 
