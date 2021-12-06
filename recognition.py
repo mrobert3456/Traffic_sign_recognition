@@ -69,10 +69,10 @@ while camera.isOpened():
 
 
 
-    # Applying mask with founded boundary numbers
+    # Thresholding the image to detect traffic sign
     mask = cv2.inRange(frame_hsv, (0, 130, 180), (180, 255, 255))
 
-    #cv2.imshow('ag',mask)
+    cv2.imshow('Threshold',mask)
     # Finding contours
     # All found contours are placed into a list
     # Every individual contour is a Numpy array of (x, y) coordinates,
@@ -117,7 +117,7 @@ while camera.isOpened():
                                      y_min + box_height - int(box_height * 0.1),
                            x_min + int(box_width * 0.1):
                            x_min + box_width - int(box_width * 0.1)]
-        cv2.imshow('cut', cut_fragment_bgr)
+        cv2.imshow('cutted part', cut_fragment_bgr)
         """
         End of:
         Cutting detected fragment
@@ -156,7 +156,6 @@ while camera.isOpened():
         """
 
         # Testing RGB Traffic Signs model trained on dataset:
-        # dataset_ts_rgb_255_mean.hdf5
         # Caught frame is preprocessed in the same way
         # Measuring classification time
         start = timer()
@@ -178,7 +177,7 @@ while camera.isOpened():
         """
 
         # Showing current view from camera in Real Time
-        # Pay attention! 'cv2.imshow' takes images in BGR format
+
         cv2.imshow('Current view', frame_bgr)
 
         # Showing cut fragment
