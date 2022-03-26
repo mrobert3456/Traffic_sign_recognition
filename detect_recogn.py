@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import h5py
@@ -7,8 +7,9 @@ import io
 import os
 from tensorflow.keras.models import load_model
 
-from timeit import default_timer as timer
 
+from timeit import default_timer as timer
+HDF5_DISABLE_VERSION_CHECK = 2
 #tensorflow 2.3
 #keras 2.3
 #h5py 2.10.0
@@ -17,7 +18,7 @@ from timeit import default_timer as timer
 
 
 # loading network
-model = load_model('ts' + '/' + 'model_ts_rgb.h5')
+model = load_model('ts/' + '/' + 'model_ts_rgb.h5')
 
 # loading trained weights
 model.load_weights('ts' + '/' + 'w_1_ts_rgb_255_mean.h5')
@@ -78,9 +79,10 @@ layers_all = network.getLayerNames()
 # print(layers_all)
 
 # Getting only detection YOLO v3 layers that are 82, 94 and 106
-layers_names_output = [layers_all[i[0] - 1] for i in network.getUnconnectedOutLayers()]
+vmi =network.getUnconnectedOutLayers()
+layers_names_output = [layers_all[i - 1] for i in network.getUnconnectedOutLayers()]
 
-camera = cv2.VideoCapture("ts_test.mp4")
+camera = cv2.VideoCapture("ts_test2.mp4")
 writer = None
 h, w = None, None
 print('DONE')
@@ -91,7 +93,7 @@ while camera.isOpened():
     # If the frame was not retrieved
     if not ret:
         break
-
+    frame = cv2.resize(frame, (1280, 720))
     #cv2.imshow('d',frame)
     # Getting spatial dimensions of the frame for the first time
     if w is None or h is None:
