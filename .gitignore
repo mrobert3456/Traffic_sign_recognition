@@ -133,3 +133,7 @@ dmypy.json
 
 #hdf files
 *.hdf5
+
+ts/
+*.mp4
+*.weights
