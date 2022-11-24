@@ -137,3 +137,6 @@ dmypy.json
 ts/
 *.mp4
 *.weights
+
+GTSRB/
+GTSDB/
