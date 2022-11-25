@@ -8,6 +8,7 @@ full_path = 'F:/pythonprogramok/TSR_projektmunka'
 This will convert every ppm into jpg, and creating seperate annotation files for them in yolov3 format and normalize them
 """
 
+
 def createAnnotations():
     # Defining lists for categories according to the classes ID's
     # Prohibitory category:
@@ -23,7 +24,7 @@ def createAnnotations():
     other = [6, 12, 13, 14, 17, 32, 41, 42]
 
     # original annoation file : all image with ROI in one file
-    ann = pd.read_csv(full_path+ts_dataset_path+'/gt.txt',
+    ann = pd.read_csv(full_path + ts_dataset_path + '/gt.txt',
                       names=['ImageID',
                              'XMin',
                              'YMin',
@@ -31,7 +32,6 @@ def createAnnotations():
                              'YMax',
                              'ClassID'],
                       sep=';')
-
 
     # Converting into yolov3 format
     ann['CategoryID'] = ''
@@ -56,21 +56,15 @@ def createAnnotations():
 
     # getting new Annotations for yolov3 format
     newAnn = ann.loc[:, ['ImageID',
-                    'CategoryID',
-                    'center x',
-                    'center y',
-                    'width',
-                    'height']].copy()
-
-
-
-
-
+                         'CategoryID',
+                         'center x',
+                         'center y',
+                         'width',
+                         'height']].copy()
 
     # Changing the current directory
     # to one with images
-    os.chdir(full_path+ts_dataset_path)
-
+    os.chdir(full_path + ts_dataset_path)
 
     # going through all directories
     # this will convert ppm to jpg and create separate annotation for each image, and normalize dataset
@@ -95,69 +89,57 @@ def createAnnotations():
                 sub_Ann['height'] = sub_Ann['height'] / h
 
                 resulted_frame = sub_Ann.loc[:, ['CategoryID',
-                                               'center x',
-                                               'center y',
-                                               'width',
-                                               'height']].copy()
+                                                 'center x',
+                                                 'center y',
+                                                 'width',
+                                                 'height']].copy()
 
                 # Checking if there is no any annotations for current image
                 if resulted_frame.isnull().values.all():
                     # Skipping this image
                     continue
 
-                path_to_save = ts_dataset_path+ '/' + image_name + '.txt'
+                path_to_save = ts_dataset_path + '/' + image_name + '.txt'
 
                 # Saving annotation for current img
-                resulted_frame.to_csv(full_path+path_to_save, header=False, index=False, sep=' ')
+                resulted_frame.to_csv(full_path + path_to_save, header=False, index=False, sep=' ')
 
-                #convert current img to jpg
-                path_to_save = full_path+ts_dataset_path + '/' + image_name + '.jpg'
+                # convert current img to jpg
+                path_to_save = full_path + ts_dataset_path + '/' + image_name + '.jpg'
                 cv2.imwrite(path_to_save, image_ppm)
+
 
 def createClassesNamesTsDataData():
     # generate classes.txt
     with open(full_path + ts_dataset_path + '/classes.txt', 'w') as f:
-        f.write('prohibitory'+ '\n')
-        f.write('danger'+ '\n')
-        f.write('mandatory'+ '\n')
+        f.write('prohibitory' + '\n')
+        f.write('danger' + '\n')
+        f.write('mandatory' + '\n')
         f.write('other')
-
-    # generating classes.names
 
     # Defining counter for classes
     c = 0
-
     # Creating file classes.names from existing one classes.txt
-    # Pay attention! If you're using Windows, it might need to change
-    # this: + '/' +
-    # to this: + '\' +
-    # or to this: + '\\' +
     with open(full_path + ts_dataset_path + '/classes.names', 'w') as names, \
             open(full_path + ts_dataset_path + '/classes.txt', 'r') as txt:
-        # Going through all lines in txt file and writing them into names file
+        # Going through all lines in txt file and writing them into classes.names file
         for line in txt:
-            names.write(line)  # Copying all info from file txt to names
-
-            # Increasing counter
+            names.write(line)
             c += 1
 
     # generating ts_data.data file
-
     with open(full_path + ts_dataset_path + '/' + 'ts_data.data', 'w') as data:
-        # Writing needed 5 lines
         # Number of classes
         data.write('classes = ' + str(c) + '\n')
-        # Location of the train.txt file
+        # train.txt file path
         data.write('train = ' + full_path + ts_dataset_path + '/' + 'train.txt' + '\n')
-
-        # Location of the test.txt file
+        # test.txt file path
         data.write('valid = ' + full_path + ts_dataset_path + '/' + 'test.txt' + '\n')
-
-        # Location of the classes.names file
+        # classes.names file path
         data.write('names = ' + full_path + ts_dataset_path + '/' + 'classes.names' + '\n')
-
-        # Location where to save weights
+        # path where to save weights
         data.write('backup = backup')
+
 
 def createTestTrainDataset():
     # Changing the current directory
@@ -167,15 +149,12 @@ def createTestTrainDataset():
     paths = []
 
     # going through all directories
-
     for current_dir, dirs, files in os.walk('.'):
         # Going through all files
         for f in files:
-            # Checking if filename ends with '.jpg'
             if f.endswith('.jpg'):
                 # save into train.txt file
                 path_to_save_into_txt_files = full_path + ts_dataset_path + '/' + f
-
                 # Appending the line into the list
                 paths.append(path_to_save_into_txt_files + '\n')
 
@@ -188,19 +167,17 @@ def createTestTrainDataset():
     # Creating train.txt and test.txt files
     # Creating file train.txt and writing 85% of lines in it
     with open('train.txt', 'w') as train_txt:
-        # Going through all elements of the list
         for e in paths:
             # Writing current path at the end of the file
             train_txt.write(e)
 
     # Creating file test.txt and writing 15% of lines in it
     with open('test.txt', 'w') as test_txt:
-        # Going through all elements of the list
         for e in p_test:
             # Writing current path at the end of the file
             test_txt.write(e)
 
 
-#createAnnotations()
+createAnnotations()
 createClassesNamesTsDataData()
 createTestTrainDataset()

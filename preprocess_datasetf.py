@@ -4,16 +4,13 @@ Created on Sat Oct 16 11:34:48 2021
 
 @author: mrobe
 """
-
 import pandas as pd
 import numpy as np
 import h5py
 import cv2
 import os
-from scipy import ndimage
 from sklearn.utils import shuffle
 from tqdm import tqdm
-import random
 from os.path import exists
 
 
@@ -44,6 +41,7 @@ def changeBrightness(img):
 
     return image_rgb
 
+
 def changeRotation(img):
     """
     Rotates the input image
@@ -64,6 +62,7 @@ def changeRotation(img):
 
     return rotated_image
 
+
 def perspectiveChangeAlongX(img):
     """
     x axis perspective transform
@@ -77,13 +76,13 @@ def perspectiveChangeAlongX(img):
     x_max = width
     y_max = height
 
-    #str matrix
+    # str matrix
     src = np.float32([[x_min, y_min],  # top-left
                       [x_max, y_min],  # top-right
                       [x_min, y_max],  # bottom-left
                       [x_max, y_max]])  # bottom-right
 
-    #dst matrix
+    # dst matrix
     dst = np.float32([[x_min + 5, y_min + 5],  # top-left
                       [x_max - 5, y_min + 5],  # top-right
                       [x_min, y_max],  # bottom-left
@@ -96,6 +95,7 @@ def perspectiveChangeAlongX(img):
     projected_image = cv2.warpPerspective(img, matrix, (height, width))
 
     return projected_image
+
 
 def perspectiveChangeAlongY(img):
     """
@@ -110,13 +110,13 @@ def perspectiveChangeAlongY(img):
     x_max = width
     y_max = height
 
-    #src matrix
+    # src matrix
     src = np.float32([[x_min, y_min],  # top-left
                       [x_max, y_min],  # top-right
                       [x_min, y_max],  # bottom-left
                       [x_max, y_max]])  # bottom-right
 
-    #dst matrix
+    # dst matrix
     dst = np.float32([[x_min, y_min],  # top-left
                       [x_max - 5, y_min + 5],  # top-right
                       [x_min, y_max],  # bottom-left
@@ -130,28 +130,29 @@ def perspectiveChangeAlongY(img):
 
     return projected_image
 
-def createValidationAndTest(x_train,y_train,dbname):
+
+def createValidationAndTest(x_train, y_train, dbname):
     """
     This method takes 903 img from every class, then assign 80% of it to validation and 20% to test
     """
-    x_temp  = []
+    x_temp = []
     y_temp = []
-    db=0
-    indexes =[]
-    for i in  tqdm(range(43)):
-        db=0
+    db = 0
+    indexes = []
+    for i in tqdm(range(43)):
+        db = 0
         for j in range(len(x_train)):
-            if y_train[j] == i and db<903:
-               indexes.append(j)
-               x_temp.append(x_train[j])
-               y_temp.append(i)
-               db=db+1
+            if y_train[j] == i and db < 903:
+                indexes.append(j)
+                x_temp.append(x_train[j])
+                y_temp.append(i)
+                db = db + 1
 
-    x_train = np.delete(x_train,indexes,axis=0)
-    y_train = np.delete(y_train,indexes,axis=0)
+    x_train = np.delete(x_train, indexes, axis=0)
+    y_train = np.delete(y_train, indexes, axis=0)
 
     x_temp = np.array(x_temp)
-    y_temp= np.array(y_temp)
+    y_temp = np.array(y_temp)
     x_temp, y_temp = shuffle(x_temp, y_temp)
     print(x_train.shape)
     # Slicing first 80% of elements from temp Numpy arrays
@@ -162,7 +163,7 @@ def createValidationAndTest(x_train,y_train,dbname):
     x_test = x_temp[int(x_temp.shape[0] * 0.8):, :, :, :]
     y_test = y_temp[int(y_temp.shape[0] * 0.8):]
 
-    with h5py.File('ts/'+ dbname+'.hdf5', 'w') as f:
+    with h5py.File('ts/' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('x_train', data=x_train, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
@@ -172,8 +173,9 @@ def createValidationAndTest(x_train,y_train,dbname):
         f.create_dataset('x_test', data=x_test, dtype='f')
         f.create_dataset('y_test', data=y_test, dtype='i')
 
+
 def equalizeDatasetByAugmentation(dbname):
-    with h5py.File('ts/aug/dataset_ts_merged.hdf5','r') as f:
+    with h5py.File('ts/aug/dataset_ts_merged.hdf5', 'r') as f:
 
         x_train = f['x_train']  # HDF5
         y_train = f['y_train']  # HDF5
@@ -187,7 +189,7 @@ def equalizeDatasetByAugmentation(dbname):
     for i in range(len(classesIndexes)):
 
         # number of images needed to be generated
-        number_of_images_to_add= np.max(classesFrequency)+10- classesFrequency[i]
+        number_of_images_to_add = np.max(classesFrequency) + 10 - classesFrequency[i]
         x_temp = []
         y_temp = []
 
@@ -234,7 +236,8 @@ def equalizeDatasetByAugmentation(dbname):
         x_train = np.concatenate((x_train, x_temp), axis=0)
         y_train = np.concatenate((y_train, y_temp), axis=0)
 
-    createValidationAndTest(x_train,y_train, dbname)
+    createValidationAndTest(x_train, y_train, dbname)
+
 
 def preproccessTrainingDataset():
     """
@@ -278,7 +281,7 @@ def preproccessTrainingDataset():
                         # Getting ROI from imgs
                         roi_img = img[y_left:y_right, x_left:x_right]
 
-                        #resize original image
+                        # resize original image
                         roi_img = cv2.resize(roi_img, (48, 48),
                                              interpolation=cv2.INTER_CUBIC)  # Inter_cubic enlarges the img after resizing
 
@@ -301,7 +304,8 @@ def preproccessTrainingDataset():
                 with h5py.File('GTSRB/' + file_name + '.hdf5', 'w') as interm_f:
                     interm_f.create_dataset('x_train', data=x_train, dtype='f')
                     interm_f.create_dataset('y_train', data=y_train, dtype='i')
-                print(file_name+" is processed")
+                print(file_name + " is processed")
+
 
 def preprocessTestDataset():
     """
@@ -362,16 +366,17 @@ def preprocessTestDataset():
         interm_f.create_dataset('x_trainTest', data=x_trainTest, dtype='f')
         interm_f.create_dataset('y_trainTest', data=y_trainTest, dtype='i')
 
+
 def mergeDatasets():
     """
     Merge Test and Train dataset into one hdf5 file
     :return:
     """
     x_trainTest = np.zeros((1, 48, 48, 3))
-    y_trainTest = np.zeros(1) #np.zeros(1)
+    y_trainTest = np.zeros(1)  # np.zeros(1)
 
     x_train = np.zeros((1, 48, 48, 3))
-    y_train = np.zeros(1)#np.zeros(1)
+    y_train = np.zeros(1)  # np.zeros(1)
 
     x_temp = np.zeros((1, 48, 48, 3))
     y_temp = np.zeros(1)
@@ -407,18 +412,19 @@ def mergeDatasets():
         f.create_dataset('x_train', data=x_train, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
+
 def mergeDatasetsWithTestDataset(dbname):
     """
     Merge Test and Train dataset into one hdf5 file and creates sub dataset for test, training and validation
     """
     x_trainTest = np.zeros((1, 48, 48, 3))
-    y_trainTest = np.zeros(1) #np.zeros(1)
+    y_trainTest = np.zeros(1)  # np.zeros(1)
 
     x_validation = np.zeros((1, 48, 48, 3))
-    y_validation = np.zeros(1)#np.zeros(1)
+    y_validation = np.zeros(1)  # np.zeros(1)
 
     x_train = np.zeros((1, 48, 48, 3))
-    y_train = np.zeros(1)#np.zeros(1)
+    y_train = np.zeros(1)  # np.zeros(1)
 
     x_temp = np.zeros((1, 48, 48, 3))
     y_temp = np.zeros(1)
@@ -429,8 +435,6 @@ def mergeDatasetsWithTestDataset(dbname):
 
         x_trainTest = np.array(x_trainTest)
         y_trainTest = np.array(y_trainTest)
-
-
 
     # getting the rest 43 HDF5 files and save it to one HDF5 file
     for curr_dir, dirs, files in os.walk('GTSRB'):
@@ -469,8 +473,7 @@ def mergeDatasetsWithTestDataset(dbname):
     x_test = x_temp[int(x_temp.shape[0] * 0.8):, :, :, :]
     y_test = y_temp[int(y_temp.shape[0] * 0.8):]
 
-
-    with h5py.File('ts/'+dbname+'.hdf5', 'w') as f:
+    with h5py.File('ts/' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('x_train', data=x_train, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
@@ -480,12 +483,12 @@ def mergeDatasetsWithTestDataset(dbname):
         f.create_dataset('x_test', data=x_test, dtype='f')
         f.create_dataset('y_test', data=y_test, dtype='f')
 
-def preprocessRGBDataset(folder,dbname):
+
+def preprocessRGBDataset(folder, dbname):
     """
     Normalization, mean subraction, std for gray images
     """
-    with h5py.File('ts/'+folder+'/'+dbname+'.hdf5','r') as f:
-
+    with h5py.File('ts/' + folder + '/' + dbname + '.hdf5', 'r') as f:
         x_train = f['x_train']
         y_train = f['y_train']
         x_train = np.array(x_train)
@@ -502,12 +505,11 @@ def preprocessRGBDataset(folder,dbname):
         y_test = np.array(y_test)
 
     # apply normalization by divide every pixel by 255
-    x_train_norm=x_train/255.0
-    x_valid_norm=x_validation/255.0
-    x_test_norm = x_test/255.0
+    x_train_norm = x_train / 255.0
+    x_valid_norm = x_validation / 255.0
+    x_test_norm = x_test / 255.0
 
-    with h5py.File('ts/'+folder+'/norm_rgb_'+dbname+'.hdf5','w') as f:
-
+    with h5py.File('ts/' + folder + '/norm_rgb_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('x_train', data=x_train_norm, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
@@ -518,19 +520,18 @@ def preprocessRGBDataset(folder,dbname):
         f.create_dataset('y_test', data=y_test, dtype='i')
 
     # mean img calc from training ds
-    mean_rgb_ds_ts = np.mean(x_train_norm,axis=0)
+    mean_rgb_ds_ts = np.mean(x_train_norm, axis=0)
 
     # keep data centralized around 0, this will speed up training
-    x_train_norm_mean = x_train_norm-mean_rgb_ds_ts
-    x_valid_norm_mean = x_valid_norm-mean_rgb_ds_ts
+    x_train_norm_mean = x_train_norm - mean_rgb_ds_ts
+    x_valid_norm_mean = x_valid_norm - mean_rgb_ds_ts
     x_test_norm_mean = x_test_norm - mean_rgb_ds_ts
 
-    #saving mean ds
-    with h5py.File('ts/'+folder+'/mean_rgb_'+dbname+'.hdf5', 'w') as f:
+    # saving mean ds
+    with h5py.File('ts/' + folder + '/mean_rgb_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('mean', data=mean_rgb_ds_ts, dtype='f')
 
-    with h5py.File('ts/'+folder+'/norm_mean_rgb_'+dbname+'.hdf5', 'w') as f:
-
+    with h5py.File('ts/' + folder + '/norm_mean_rgb_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('x_train', data=x_train_norm_mean, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
@@ -540,17 +541,17 @@ def preprocessRGBDataset(folder,dbname):
         f.create_dataset('x_test', data=x_test_norm_mean, dtype='f')
         f.create_dataset('y_test', data=y_test, dtype='i')
 
-    #calc std
+    # calc std
     std_rgb_ds_ts = np.std(x_train_norm, axis=0)
 
     x_train_norm_mean_std = x_train_norm / std_rgb_ds_ts
     x_valid_norm_mean_std = x_valid_norm / std_rgb_ds_ts
     x_test_norm_mean_std = x_test_norm / std_rgb_ds_ts
     # save std_ds
-    with h5py.File('ts/'+folder+'/std_rgb_'+dbname+'.hdf5', 'w') as f:
+    with h5py.File('ts/' + folder + '/std_rgb_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('std', data=std_rgb_ds_ts, dtype='f')
 
-    with h5py.File('ts/'+folder+'/norm_mean_std_rgb_'+dbname+'.hdf5', 'w') as f:
+    with h5py.File('ts/' + folder + '/norm_mean_std_rgb_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('x_train', data=x_train_norm_mean_std, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
@@ -560,11 +561,12 @@ def preprocessRGBDataset(folder,dbname):
         f.create_dataset('x_test', data=x_test_norm_mean_std, dtype='f')
         f.create_dataset('y_test', data=y_test, dtype='i')
 
-def preprocessGrayDataset(folder,dbname):
+
+def preprocessGrayDataset(folder, dbname):
     """
     Normalization, mean subraction, std for gray images
     """
-    with h5py.File('ts/'+folder+'/'+dbname+'.hdf5','r') as f:
+    with h5py.File('ts/' + folder + '/' + dbname + '.hdf5', 'r') as f:
         x_train = f['x_train']
         y_train = f['y_train']
         x_train = np.array(x_train)
@@ -585,18 +587,18 @@ def preprocessGrayDataset(folder,dbname):
     # Converting all images to gray
     x_train = np.array(list(map(lambda x: cv2.cvtColor(x, cv2.COLOR_RGB2GRAY), x_train)))
     x_validation = np.array(list(map(lambda x: cv2.cvtColor(x, cv2.COLOR_RGB2GRAY), x_validation)))
-    x_test  = np.array(list(map(lambda x: cv2.cvtColor(x, cv2.COLOR_RGB2GRAY), x_test)))
+    x_test = np.array(list(map(lambda x: cv2.cvtColor(x, cv2.COLOR_RGB2GRAY), x_test)))
 
     # add plus 1 dimension
     x_train = x_train[:, :, :, np.newaxis]
     x_validation = x_validation[:, :, :, np.newaxis]
-    x_test = x_test[:,:,:, np.newaxis]
+    x_test = x_test[:, :, :, np.newaxis]
 
     # apply normalization by divide every pixel by 255
-    x_train_norm=x_train/255.0
-    x_valid_norm=x_validation/255.0
-    x_test_norm = x_test/255.0
-    with h5py.File('ts/'+folder+'/norm_gray_'+dbname+'.hdf5','w') as f:
+    x_train_norm = x_train / 255.0
+    x_valid_norm = x_validation / 255.0
+    x_test_norm = x_test / 255.0
+    with h5py.File('ts/' + folder + '/norm_gray_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('x_train', data=x_train_norm, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
@@ -607,18 +609,18 @@ def preprocessGrayDataset(folder,dbname):
         f.create_dataset('y_test', data=y_test, dtype='i')
 
     # mean img calc from training ds
-    mean_gray_ds_ts = np.mean(x_train_norm,axis=0)
+    mean_gray_ds_ts = np.mean(x_train_norm, axis=0)
 
     # keep data centralized around 0, this will speed up training
-    x_train_norm_mean = x_train_norm-mean_gray_ds_ts
-    x_valid_norm_mean = x_valid_norm-mean_gray_ds_ts
+    x_train_norm_mean = x_train_norm - mean_gray_ds_ts
+    x_valid_norm_mean = x_valid_norm - mean_gray_ds_ts
     x_test_norm_mean = x_test_norm - mean_gray_ds_ts
 
-    #saving mean ds
-    with h5py.File('ts/'+folder+'/mean_gray_'+dbname+'.hdf5', 'w') as f:
+    # saving mean ds
+    with h5py.File('ts/' + folder + '/mean_gray_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('mean', data=mean_gray_ds_ts, dtype='f')
 
-    with h5py.File('ts/'+folder+'/norm_mean_gray_'+dbname+'.hdf5', 'w') as f:
+    with h5py.File('ts/' + folder + '/norm_mean_gray_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('x_train', data=x_train_norm_mean, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
@@ -628,17 +630,17 @@ def preprocessGrayDataset(folder,dbname):
         f.create_dataset('x_test', data=x_test_norm_mean, dtype='f')
         f.create_dataset('y_test', data=y_test, dtype='i')
 
-    #calc std from mean
+    # calc std from mean
     std_gray_ds_ts = np.std(x_train_norm_mean, axis=0)
 
     x_train_norm_mean_std = x_train_norm_mean / std_gray_ds_ts
     x_valid_norm_mean_std = x_valid_norm_mean / std_gray_ds_ts
-    x_test_norm_mean_std = x_test_norm_mean /std_gray_ds_ts
+    x_test_norm_mean_std = x_test_norm_mean / std_gray_ds_ts
     # save std_ds
-    with h5py.File('ts/'+folder+'/std_gray_'+dbname+'.hdf5', 'w') as f:
+    with h5py.File('ts/' + folder + '/std_gray_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('std', data=std_gray_ds_ts, dtype='f')
 
-    with h5py.File('ts/'+folder +'/norm_mean_std_gray_'+dbname+'.hdf5', 'w') as f:
+    with h5py.File('ts/' + folder + '/norm_mean_std_gray_' + dbname + '.hdf5', 'w') as f:
         f.create_dataset('x_train', data=x_train_norm_mean_std, dtype='f')
         f.create_dataset('y_train', data=y_train, dtype='i')
 
@@ -649,17 +651,18 @@ def preprocessGrayDataset(folder,dbname):
         f.create_dataset('y_test', data=y_test, dtype='i')
 
 
-def generateAugmentedDataset(folder="aug",dbname='dataset_ts_augmented'):
+def generateAugmentedDataset(folder="aug", dbname='dataset_ts_augmented'):
     mergeDatasets()
-    equalizeDatasetByAugmentation(folder+'/'+dbname)
-    preprocessRGBDataset(folder,dbname)
-    preprocessGrayDataset(folder,dbname)
+    equalizeDatasetByAugmentation(folder + '/' + dbname)
+    preprocessRGBDataset(folder, dbname)
+    preprocessGrayDataset(folder, dbname)
 
-def generateOriginalDataset(folder="orig",dbname="dataset_ts_orig"):
 
-    mergeDatasetsWithTestDataset(folder+'/'+dbname)
-    preprocessRGBDataset(folder,dbname)
-    preprocessGrayDataset(folder,dbname)
+def generateOriginalDataset(folder="orig", dbname="dataset_ts_orig"):
+    mergeDatasetsWithTestDataset(folder + '/' + dbname)
+    preprocessRGBDataset(folder, dbname)
+    preprocessGrayDataset(folder, dbname)
+
 
 # preprocessing methods needs to run only once
 preproccessTrainingDataset()
