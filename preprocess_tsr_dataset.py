@@ -133,7 +133,8 @@ def perspectiveChangeAlongY(img):
 
 def createValidationAndTest(x_train, y_train, dbname):
     """
-    This method takes 903 img from every class, then assign 80% of it to validation and 20% to test
+    70% goes to training -> 903*43 = 38829
+    This method takes 903 img from every class, then assign 80% of (38829) it to validation and 20% of (38829) to test
     """
     x_temp = []
     y_temp = []
@@ -177,10 +178,9 @@ def createValidationAndTest(x_train, y_train, dbname):
 def equalizeDatasetByAugmentation(dbname):
     with h5py.File('ts/aug/dataset_ts_merged.hdf5', 'r') as f:
 
-        x_train = f['x_train']  # HDF5
-        y_train = f['y_train']  # HDF5
+        x_train = f['x_train']
+        y_train = f['y_train']
 
-        # Converting them into Numpy arrays
         x_train = np.array(x_train)
         y_train = np.array(y_train)
 
@@ -416,15 +416,17 @@ def mergeDatasets():
 def mergeDatasetsWithTestDataset(dbname):
     """
     Merge Test and Train dataset into one hdf5 file and creates sub dataset for test, training and validation
+    70% goes to training -> 51.840*07 =36288
+    Remaining 30% to test and validation: 80% for validation and 20% for test
     """
     x_trainTest = np.zeros((1, 48, 48, 3))
-    y_trainTest = np.zeros(1)  # np.zeros(1)
+    y_trainTest = np.zeros(1)
 
     x_validation = np.zeros((1, 48, 48, 3))
-    y_validation = np.zeros(1)  # np.zeros(1)
+    y_validation = np.zeros(1)
 
     x_train = np.zeros((1, 48, 48, 3))
-    y_train = np.zeros(1)  # np.zeros(1)
+    y_train = np.zeros(1)
 
     x_temp = np.zeros((1, 48, 48, 3))
     y_temp = np.zeros(1)

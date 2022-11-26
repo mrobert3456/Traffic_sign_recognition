@@ -6,6 +6,11 @@ ts_dataset_path = '/GTSDB'
 full_path = 'F:/pythonprogramok/TSR_projektmunka'
 """
 This will convert every ppm into jpg, and creating seperate annotation files for them in yolov3 format and normalize them
+
+results : jpg images, classes.names, train.txt, test.txt, ts_data.data
+train.txt and test.txt contains full paths for created jpg images
+classes.names contains the class names
+ts_data.data contains full path for train.txt, test.txt and classes.names
 """
 
 
@@ -62,17 +67,14 @@ def createAnnotations():
                          'width',
                          'height']].copy()
 
-    # Changing the current directory
-    # to one with images
+    # Changing the current directory to one with images
     os.chdir(full_path + ts_dataset_path)
 
     # going through all directories
     # this will convert ppm to jpg and create separate annotation for each image, and normalize dataset
     # and files in them from the current directory
     for current_dir, dirs, files in os.walk('.'):
-        # Going through all files
         for f in files:
-            # if file is ppm
             if f.endswith('.ppm'):
                 # Reading image and getting its real width and height
                 image_ppm = cv2.imread(f)
@@ -142,15 +144,12 @@ def createClassesNamesTsDataData():
 
 
 def createTestTrainDataset():
-    # Changing the current directory
     os.chdir(full_path + ts_dataset_path)
 
     # Defining list to write paths in
     paths = []
 
-    # going through all directories
     for current_dir, dirs, files in os.walk('.'):
-        # Going through all files
         for f in files:
             if f.endswith('.jpg'):
                 # save into train.txt file

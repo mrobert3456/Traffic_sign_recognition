@@ -143,8 +143,7 @@ while camera.isOpened():
 
                 cv2.putText(frame, text_box_current, (x_min, y_min - 5),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                # print(text_box_current)
-    # frame =cv2.resize(frame,(1440,720))
+
     cv2.imshow('Detection', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
