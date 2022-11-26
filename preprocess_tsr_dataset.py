@@ -13,6 +13,10 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 from os.path import exists
 
+"""
+    Generate augmented dataset and original dataset
+    the results goes to either to the 'ts/aug' folder or to the 'ts/orig'
+"""
 
 def changeBrightness(img):
     """
