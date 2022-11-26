@@ -3,7 +3,7 @@ import os
 import cv2
 
 ts_dataset_path = '/GTSDB'
-full_path = 'F:/pythonprogramok/TSR_projektmunka'
+full_path = os.getcwd()
 """
 This will convert every ppm into jpg, and creating seperate annotation files for them in yolov3 format and normalize them
 
@@ -180,3 +180,4 @@ def createTestTrainDataset():
 createAnnotations()
 createClassesNamesTsDataData()
 createTestTrainDataset()
+
