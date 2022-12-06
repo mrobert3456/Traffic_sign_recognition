@@ -24,7 +24,7 @@ labels = np.array(labels.loc[:, 'SignName']).flatten()
 
 # ----------------------darknet------------------------
 
-path_to_weights = 'ts/yolov3_ts_traine_8000.weights'
+path_to_weights = 'ts/yolov3_ts_train_7000.weights'
 path_to_cfg = 'ts/yolov3_ts_test.cfg'
 
 # Loading trained YOLO v3 weights and cfg files
