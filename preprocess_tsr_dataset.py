@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Oct 16 11:34:48 2021
 
-@author: mrobe
-"""
 import pandas as pd
 import numpy as np
 import h5py
