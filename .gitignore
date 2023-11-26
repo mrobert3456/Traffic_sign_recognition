@@ -134,9 +134,10 @@ dmypy.json
 #hdf files
 *.hdf5
 
-ts/
+
 *.mp4
-*.weights
+ts/*.weights
+ts/*.h5
 
 GTSRB/
 GTSDB/
