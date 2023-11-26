@@ -1,7 +1,10 @@
+import sys
+
 import pandas as pd
 import numpy as np
 import cv2
 from tensorflow.keras.models import load_model
+from tqdm import tqdm
 
 HDF5_DISABLE_VERSION_CHECK = 2
 # tensorflow 2.3
@@ -9,7 +12,6 @@ HDF5_DISABLE_VERSION_CHECK = 2
 # h5py 2.10.0
 # numpy 1.18.5
 # pandas 1.2.4
-
 
 model = load_model('ts/model_1_ts_gray.h5')
 model.load_weights('ts/w_1_dataset_ts_gray_norm.h5')
@@ -47,104 +49,134 @@ colours = np.random.randint(0, 255, size=(len(labels), 3), dtype='uint8')
 layers_all = network.getLayerNames()
 layers_names_output = [layers_all[i - 1] for i in network.getUnconnectedOutLayers()]
 
-camera = cv2.VideoCapture("ts_test2.mp4")
 writer = None
-h, w = None, None
-print('DONE')
-while camera.isOpened():
+global frameArray
+frameArray = []
 
-    ret, frame = camera.read()
-    if not ret:
-        break
-    frame = cv2.resize(frame, (1280, 720))
-    # Getting spatial dimensions of the frame for the first time
-    if w is None or h is None:
-        # Slicing two elements from tuple
-        h, w = frame.shape[:2]
+def processVideo(video):
+    camera = cv2.VideoCapture(video)
+    h, w = None, None
+    while camera.isOpened():
 
-    # Blob from current frame -> this preprocessing the image to be normalized, resized and converts into RGB
-    blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (416, 416), swapRB=True, crop=False)
+        ret, frame = camera.read()
+        if not ret:
+            break
+        frame = cv2.resize(frame, (1280, 720))
+        # Getting spatial dimensions of the frame for the first time
+        if w is None or h is None:
+            # Slicing two elements from tuple
+            h, w = frame.shape[:2]
 
-    # Forward pass with blob
-    network.setInput(blob)
-    output_from_network = network.forward(layers_names_output)
+        # Blob from current frame -> this preprocessing the image to be normalized, resized and converts into RGB
+        blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (416, 416), swapRB=True, crop=False)
 
-    # array for detected bounding boxes, confidences and class number
-    bounding_boxes = []
-    confidences = []
-    class_numbers = []
+        # Forward pass with blob
+        network.setInput(blob)
+        output_from_network = network.forward(layers_names_output)
 
-    # output layers after feed forward pass
-    for result in output_from_network:
-        # all detections from current output layer
-        for detected_objects in result:
-            # class probabilities
-            scores = detected_objects[5:]
-            # index of the most probable class
-            class_current = np.argmax(scores)
-            # Getting probability values for current class
-            confidence_current = scores[class_current]
+        # array for detected bounding boxes, confidences and class number
+        bounding_boxes = []
+        confidences = []
+        class_numbers = []
 
-            if confidence_current > probability_minimum:
-                # Scaling bounding box coordinates to the initial frame size
-                box_current = detected_objects[0:4] * np.array([w, h, w, h])
+        # output layers after feed forward pass
+        for result in output_from_network:
+            # all detections from current output layer
+            for detected_objects in result:
+                # class probabilities
+                scores = detected_objects[5:]
+                # index of the most probable class
+                class_current = np.argmax(scores)
+                # Getting probability values for current class
+                confidence_current = scores[class_current]
 
-                # Getting top left corner coordinates of bounding box
-                x_center, y_center, box_width, box_height = box_current
-                x_min = int(x_center - (box_width / 2))
-                y_min = int(y_center - (box_height / 2))
+                if confidence_current > probability_minimum:
+                    # Scaling bounding box coordinates to the initial frame size
+                    box_current = detected_objects[0:4] * np.array([w, h, w, h])
 
-                bounding_boxes.append([x_min, y_min, int(box_width), int(box_height)])
-                confidences.append(float(confidence_current))
-                class_numbers.append(class_current)
+                    # Getting top left corner coordinates of bounding box
+                    x_center, y_center, box_width, box_height = box_current
+                    x_min = int(x_center - (box_width / 2))
+                    y_min = int(y_center - (box_height / 2))
 
-    # Implementing non-maximum suppression of given bounding boxes
-    # this will get only the relevant bounding boxes (there might be more which crosses each other, and etc)
-    results = cv2.dnn.NMSBoxes(bounding_boxes, confidences, probability_minimum, threshold)
+                    bounding_boxes.append([x_min, y_min, int(box_width), int(box_height)])
+                    confidences.append(float(confidence_current))
+                    class_numbers.append(class_current)
 
-    # if there are detected objects, then these can be forward to the recognition phase
-    if len(results) > 0:
+        # Implementing non-maximum suppression of given bounding boxes
+        # this will get only the relevant bounding boxes (there might be more which crosses each other, and etc)
+        results = cv2.dnn.NMSBoxes(bounding_boxes, confidences, probability_minimum, threshold)
 
-        for i in results.flatten():
-            # Bounding box coordinates, its width and height
-            x_min, y_min = bounding_boxes[i][0], bounding_boxes[i][1]
-            box_width, box_height = bounding_boxes[i][2], bounding_boxes[i][3]
+        # if there are detected objects, then these can be forward to the recognition phase
+        if len(results) > 0:
 
-            # Cut fragment with Traffic Sign
-            c_ts = frame[y_min:y_min + int(box_height), x_min:x_min + int(box_width), :]
-            if c_ts.shape[:1] == (0,) or c_ts.shape[1:2] == (0,):
-                pass
-            else:
-                # Blob from current frame -> this preprocessing the image to be normalized, resized and converts into RGB
-                blob_ts = cv2.dnn.blobFromImage(c_ts, 1 / 255.0, size=(48, 48), swapRB=True, crop=False)
-                # blob_ts[0] = blob_ts[0, :, :, :] - self.mean_rgb # only needed for mean subtraction
-                # blob_ts[0] = blob_ts[0, :, :, :] / self.std_rgb # only needed for std
-                blob_ts = blob_ts.transpose(0, 2, 3, 1)
+            for i in results.flatten():
+                # Bounding box coordinates, its width and height
+                x_min, y_min = bounding_boxes[i][0], bounding_boxes[i][1]
+                box_width, box_height = bounding_boxes[i][2], bounding_boxes[i][3]
 
-                # CONVERTING GRAY, CAN BE OMITTED IF YOU ARE USING RGB MODELL
-                blob_ts = np.squeeze(blob_ts)  # shape (48,48,3)
+                # Cut fragment with Traffic Sign
+                c_ts = frame[y_min:y_min + int(box_height), x_min:x_min + int(box_width), :]
+                if c_ts.shape[:1] == (0,) or c_ts.shape[1:2] == (0,):
+                    pass
+                else:
+                    # Blob from current frame -> this preprocessing the image to be normalized, resized and converts into RGB
+                    blob_ts = cv2.dnn.blobFromImage(c_ts, 1 / 255.0, size=(48, 48), swapRB=True, crop=False)
+                    # blob_ts[0] = blob_ts[0, :, :, :] - self.mean_rgb # only needed for mean subtraction
+                    # blob_ts[0] = blob_ts[0, :, :, :] / self.std_rgb # only needed for std
+                    blob_ts = blob_ts.transpose(0, 2, 3, 1)
 
-                blob_ts = cv2.cvtColor(blob_ts, cv2.COLOR_RGB2GRAY)  # shape (48,48)
+                    # CONVERTING GRAY, CAN BE OMITTED IF YOU ARE USING RGB MODELL
+                    blob_ts = np.squeeze(blob_ts)  # shape (48,48,3)
 
-                blob_ts = blob_ts[np.newaxis, :, :, np.newaxis]  # shape (1,48,48,1)
+                    blob_ts = cv2.cvtColor(blob_ts, cv2.COLOR_RGB2GRAY)  # shape (48,48)
 
-                scores = model.predict(blob_ts)
+                    blob_ts = blob_ts[np.newaxis, :, :, np.newaxis]  # shape (1,48,48,1)
 
-                # highest probability class
-                prediction = np.argmax(scores)
+                    scores = model.predict(blob_ts)
 
-                # Drawing bounding box on the original current frame
-                cv2.rectangle(frame, (x_min, y_min),
-                              (x_min + box_width, y_min + box_height),
-                              (0, 255, 0), 2)
+                    # highest probability class
+                    prediction = np.argmax(scores)
 
-                text_box_current = '{}: {:.4f}'.format(labels[prediction],
-                                                       confidences[i])
+                    # Drawing bounding box on the original current frame
+                    cv2.rectangle(frame, (x_min, y_min),
+                                  (x_min + box_width, y_min + box_height),
+                                  (0, 255, 0), 2)
 
-                cv2.putText(frame, text_box_current, (x_min, y_min - 5),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                    text_box_current = '{}: {:.4f}'.format(labels[prediction],
+                                                           confidences[i])
 
-    cv2.imshow('Detection', frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-cv2.destroyAllWindows()
+                    cv2.putText(frame, text_box_current, (x_min, y_min - 5),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+        frameArray.append(frame)
+        cv2.imshow('Detection', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    cv2.destroyAllWindows()
+
+def writeVideo(resVideoName):
+    fpsCount = 25
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    writer = cv2.VideoWriter(resVideoName, fourcc, fpsCount,
+                            (1280, 720), True)
+    print(len(frameArray))
+    start = 0
+    for i in range(0, len(frameArray)):
+
+        if ((start + fpsCount) < len(frameArray) - 1):
+            end = start + fpsCount
+            for j in tqdm(range(start, end)):
+                writer.write(frameArray[j])
+
+        start = start + fpsCount
+    writer.release()
+
+if __name__ == '__main__':
+    argCount = len(sys.argv)
+
+    inputFile = str(sys.argv[1]) if argCount >= 2 else 'ts_test2.mp4'
+    outputFile = str(sys.argv[2]) if argCount >= 3 else 'output.mp4'
+
+    processVideo(inputFile)
+    writeVideo(outputFile)
