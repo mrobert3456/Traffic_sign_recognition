@@ -4,7 +4,7 @@
 ![project_video_clip](./data/output.gif)
 
 
-# How it works
+# ⚙ How it works
 
 1. **Traffic sign detection** using [YoloV3](https://pjreddie.com/darknet/yolo/), trained with [GTSDB dataset](https://benchmark.ini.rub.de/gtsdb_news.html) using [Darknet framework](https://pjreddie.com/darknet/)
 2. **Traffic sign detection** trained with [GTSRB dataset](https://benchmark.ini.rub.de/gtsrb_news.html) using Convolutional Neural Network
@@ -13,7 +13,7 @@
 For detailed description of how it works, please check out my publication on IEEE:
 https://ieeexplore.ieee.org/abstract/document/10158539
 ---
-# Installation
+# 📦 Installation
 
 ## This Repository
 
@@ -24,7 +24,7 @@ git clone https://github.com/mrobert3456/Traffic_sign_recognition.git
 cd Traffic_sign_recognition
 ```
 
-## Software Dependencies
+## ⚡ Software Dependencies
 
 This project utilizes the following packages:
 
@@ -44,7 +44,7 @@ conda activate GPU_ENV
 ```
 
 
-# Usage
+# 🚀 Usage
 
 ## Traffic sign recognition
 1. Before you run the preprocessing methods and training, create a folder called **GTSRB** in the **root** folder
